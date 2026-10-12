@@ -42,24 +42,40 @@ The corrected pipeline will be evaluated against predefined recovery criteria be
 
 If the correction fails the acceptance criteria, the system will reject it and retain the previously approved pipeline.
 
-### Implementation Status
+### Implementation Status — Phase 2
 
-- Train/validation/test split: Completed
-- Healthy training reference for BILL_AMT1: Completed
-- Interactive detection visualization: Implemented
-- Actual missing-value injection: Not yet implemented
-- Automated failure detection on experimental batches: Not yet implemented
-- Median-imputation recovery experiment: Not yet implemented
-- Recovery acceptance and rollback: Not yet implemented
+**Completed in Phase 1 (Preliminary Experiments)**
 
+- Established a logistic regression baseline using a stratified 70/15/15 training, validation, and test split with random seed 42.
+- Evaluated healthy baseline performance on the validation set.
+- Injected missing values across all 23 predictor features at overall rates of 5%, 15%, and 30%.
+- Implemented an overall missingness-rate detector and an inference-success check.
+- Applied median imputation fitted on healthy training data.
+- Evaluated corrected validation batches using F1, recall, ROC-AUC, and accuracy.
+- Implemented preliminary recovery acceptance decisions using a 10% relative F1 degradation tolerance.
+- Retained the approved model configuration when a candidate recovery failed validation; a full production rollback mechanism has not yet been demonstrated.
 
-**Duplicate Record Investigation**
+**Completed in Phase 2 (Healthy Reference Profile)**
 
-The training dataset contains 21,000 observations. After excluding the identifier column, 36 records belong to duplicate groups, corresponding to 18 duplicate occurrences beyond the first (approximately 0.086%).
+- Established a healthy reference using 21,000 training observations and 23 predictor features.
+- Documented feature distributions, missingness, class balance, rare categorical codes, and negative billing amounts.
+- Selected `BILL_AMT1` for feature-specific missingness monitoring.
+- Selected `LIMIT_BAL` for numerical drift monitoring and `PAY_0` for categorical shift monitoring.
+- Defined five preliminary monitoring candidates: schema, missingness, numerical drift, categorical shift, and class balance.
+- Proposed a `BILL_AMT1` missingness alert threshold of more than 5 percentage points above the healthy training reference.
 
-These records may represent different customers with identical feature values and target labels. Because their validity has not been disproven, they will be retained during initial profiling.
+**Planned for Later Phases**
 
-No duplicate records have been removed.
+- Implement and evaluate feature-specific missingness injection into `BILL_AMT1`.
+- Test the proposed `BILL_AMT1` detection rule on actual corrupted batches.
+- Evaluate detection reliability, including missed failures and false alerts.
+- Investigate numerical drift and categorical shift using controlled experiments.
+- Formalize recovery acceptance criteria, including a critical-class recall guardrail.
+- Implement and verify model-state preservation and rollback behavior.
+
+**Experimental distinction:** Phase 1 used overall missingness across all predictor features. The next controlled experiment will target `BILL_AMT1` specifically. The results of these experiments must be reported separately.
+
+**Limitation:** Recovery evaluation currently uses known validation labels in an offline experiment. In a deployed system, true labels may not be immediately available, so performance-based acceptance may require delayed evaluation.
 
 ### Training Numerical Feature Profile
 
@@ -135,3 +151,50 @@ The SHML system will initially monitor five aspects of data quality and distribu
 - Detection threshold: To be established later.
 
 These candidates were selected using training-only reference statistics. Automated monitoring and recovery have not yet been implemented.
+
+
+## Connection to the Self-Healing Machine Learning System
+
+### Purpose of the Healthy Reference Profile
+
+The healthy reference profile establishes the expected characteristics of the training data before introducing controlled failures.
+
+It was created using 21,000 training observations and 23 predictor features. The profile provides a baseline for comparing future incoming data batches and identifying potential data-quality or distribution changes.
+
+### How the Reference Profile Supports Failure Detection
+
+The SHML system will use the healthy reference to evaluate five monitoring conditions:
+
+1. **Schema validation:** Verify that incoming batches contain the expected predictor features with compatible data types.
+2. **Missingness monitoring:** Compare incoming missing-value rates with the healthy reference. `BILL_AMT1` is the selected feature for the next controlled missingness experiment.
+3. **Numerical drift:** Compare the distribution of `LIMIT_BAL` against its training reference distribution.
+4. **Categorical shift:** Compare `PAY_0` category frequencies and identify previously unseen codes.
+5. **Class balance:** Monitor changes in the default rate when actual outcome labels become available.
+
+### Connection to Diagnosis and Correction
+
+When the system detects a potential failure, it will identify the affected feature and type of problem before selecting an appropriate response.
+
+For the initial missingness experiment, the proposed correction is median imputation using the median calculated from healthy training data.
+
+Schema failures, numerical drift, and categorical shifts may require investigation rather than automatic correction.
+
+### Recovery Validation and Safety
+
+After an approved correction is applied, the corrected pipeline must be evaluated before the recovery is accepted.
+
+The preliminary Phase 1 experiments used F1-score as the primary recovery metric and allowed a maximum relative F1 degradation of 10% compared with the healthy baseline.
+
+A correction that fails the recovery criteria must not replace the approved model or pipeline state. The failure should be recorded and escalated for further investigation.
+
+Future experiments will also examine recall-based safeguards because identifying clients who actually default is important for this classification problem.
+
+### Scope and Limitations
+
+Phase 2 establishes the reference profile and proposed monitoring rules. It does not implement new automated recovery experiments.
+
+Preliminary missingness injection, median imputation, and recovery acceptance experiments were performed in Phase 1.
+
+The current recovery evaluation uses labeled validation data. A deployed system may require delayed performance evaluation when true outcomes are not immediately available.
+
+The reference profile and monitoring rules provide the foundation for subsequent failure-detection, diagnosis, and recovery experiments.

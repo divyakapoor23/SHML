@@ -1,0 +1,5 @@
+Missingness,Safety Decision,Fallback Action,Batch Blocked,Rollback Required,Manual Review,Explanation
+0.0,ACCEPT,APPROVE_FOR_OFFLINE_EVALUATION,False,False,False,Recovery satisfied the offline safety criteria.
+0.05,ACCEPT,APPROVE_FOR_OFFLINE_EVALUATION,False,False,False,Recovery satisfied the offline safety criteria.
+0.15,ACCEPT,APPROVE_FOR_OFFLINE_EVALUATION,False,False,False,Recovery satisfied the offline safety criteria.
+0.3,ACCEPT,APPROVE_FOR_OFFLINE_EVALUATION,False,False,False,Recovery satisfied the offline safety criteria.

@@ -1,0 +1,5 @@
+Injected Missingness,feature,observed_missingness,missingness_increase,failure_detected,failure_type,severity,recovery_action,missing_before,missing_after,values_imputed,recovery_applied
+0.0,BILL_AMT1,0.0,0.0,False,No missingness,None,No correction,0,0,0,False
+0.05,BILL_AMT1,0.05,0.05,False,Numerical missingness,Below alert threshold,Routine median preprocessing,225,0,225,True
+0.15,BILL_AMT1,0.15,0.15,True,Numerical missingness,Moderate,Median imputation,675,0,675,True
+0.3,BILL_AMT1,0.3,0.3,True,Numerical missingness,Severe,Median imputation,1350,0,1350,True

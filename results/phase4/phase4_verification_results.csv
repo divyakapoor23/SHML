@@ -1,0 +1,5 @@
+Missingness,Alert,Severity,Values Imputed,Remaining Missing,Verification
+0.0,False,None,0,0,PASS
+0.05,False,Below alert threshold,225,0,PASS
+0.15,True,Moderate,675,0,PASS
+0.3,True,Severe,1350,0,PASS

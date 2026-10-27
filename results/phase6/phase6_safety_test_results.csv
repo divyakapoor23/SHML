@@ -1,0 +1,5 @@
+Test,Expected,Actual,Passed
+Excessive F1 loss,REJECT,REJECT,True
+Excessive recall loss,REJECT,REJECT,True
+Data integrity failure,REJECT,REJECT,True
+Valid recovery,ACCEPT,ACCEPT,True

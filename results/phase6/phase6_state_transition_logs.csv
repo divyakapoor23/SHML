@@ -1,0 +1,3 @@
+Candidate,Decision,Action,Active Version,Expected Decision,Passed
+candidate_unsafe_v2,REJECT,PRESERVE_APPROVED_STATE,baseline_v1,REJECT,True
+candidate_safe_v2,ACCEPT,PROMOTE_CANDIDATE,candidate_safe_v2,ACCEPT,True

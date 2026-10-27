@@ -393,7 +393,8 @@ Development environment: Jupyter Notebook
 
 Version control: Git and GitHub
 
-Planned cloud platform: Microsoft Azure
+Planned cloud platform: Google Cloud
+
 13. Next Steps
 Academic Version — Finalization
 - Test the original Phase 5 safety-controller function directly with the same unsafe and safe cases.

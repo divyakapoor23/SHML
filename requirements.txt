@@ -1,5 +1,6 @@
 # ── CORE DATA HANDLING (all phases) ─────────────────────────
 pandas==2.2.3
+xlrd==2.0.2
 numpy==2.3.4
 scipy==1.18.0
 joblib==1.5.3

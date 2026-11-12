@@ -1,0 +1,5 @@
+missingness,detected,severity,values_imputed,integrity_passed,f1,recall,roc_auc,decision
+0%,False,None,0,True,0.356983,0.240201,0.713025,ACCEPT
+5%,False,Below alert threshold,225,True,0.358898,0.242211,0.71321,ACCEPT
+15%,True,Moderate,675,True,0.360947,0.245226,0.708958,ACCEPT
+30%,True,Severe,1350,True,0.373723,0.257286,0.711135,ACCEPT

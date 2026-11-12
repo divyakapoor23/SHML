@@ -1,0 +1,37 @@
+SHML standalone pipeline starting...
+
+Dataset information:
+Dataset rows: 30000
+Number of predictors: 23
+Training rows: 21000
+Validation rows: 4500
+Test rows: 4500
+
+Phase 7.5.3.2 dataset verification passed.
+
+Healthy baseline metrics:
+accuracy: 0.8087
+precision: 0.6948
+recall: 0.2402
+f1: 0.3570
+roc_auc: 0.7130
+
+Phase 7.5.3.3 baseline verification passed.
+Missingness: 0% | Missing values: 0
+Missingness: 5% | Missing values: 225
+Missingness: 15% | Missing values: 675
+Missingness: 30% | Missing values: 1350
+
+Phase 7.5.3.4 missingness verification passed.
+
+Integrated SHML experiment results:
+missingness  detected              severity  values_imputed  integrity_passed       f1   recall  roc_auc decision
+         0%     False                  None               0              True 0.356983 0.240201 0.713025   ACCEPT
+         5%     False Below alert threshold             225              True 0.358898 0.242211 0.713210   ACCEPT
+        15%      True              Moderate             675              True 0.360947 0.245226 0.708958   ACCEPT
+        30%      True                Severe            1350              True 0.373723 0.257286 0.711135   ACCEPT
+
+Results saved to: /home/dikapoor/SHML/results/phase7/standalone_pipeline_results.csv
+Phase 7.5.4 results export verification passed.
+
+Phase 7.5 standalone SHML pipeline completed successfully.

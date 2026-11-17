@@ -1,182 +1,556 @@
-### Current Research Focus
+# Self-Healing Machine Learning (SHML)
 
-The current research focuses on rigorously investigating the effects of controlled missingness in the `BILL_AMT1` feature of the UCI Default of Credit Card Clients dataset.
+**Automated Failure Detection, Model Recovery, and Safety Validation for Credit-Default Prediction**
 
-Although the initial SHML framework implements automated failure detection, diagnosis, recovery, performance evaluation, and safety validation, further experimentation is required to determine whether the system can effectively restore predictive performance following data corruption.
+## 1. Project Overview
 
-The study investigates missingness severity, feature importance and redundancy, recovery strategies, statistical reliability, reproducibility, and subgroup performance.
+This project investigates whether a machine learning system can automatically detect data-quality failures, diagnose their causes, evaluate recovery strategies, and safely accept or reject corrective actions.
 
-The immediate objective is to establish scientifically defensible evidence of when data corruption affects predictions, whether recovery improves performance, and whether the safety mechanism makes appropriate decisions.
+The research focuses on controlled missingness in the `BILL_AMT1` feature of the **UCI Default of Credit Card Clients** dataset, using Logistic Regression as the baseline classifier.
 
-Additional failure types, model architectures, and cloud deployment remain future extensions.
+The project aims to answer an important question:
 
+**Can an automated machine learning system recognize when a data failure occurs, evaluate potential corrections, and determine whether the correction is safe and effective?**
 
+Unlike conventional machine learning pipelines that rely on manual intervention, SHML investigates an automated detection, recovery, evaluation, and safety-decision framework.
 
-## 2. Research Questions and Hypotheses
+### Current Research Status
+
+The following components have been implemented or experimentally evaluated:
+
+- Dataset preprocessing and exploratory data analysis
+- Healthy baseline model development
+- Automated missingness detection and diagnosis
+- Median-based recovery in the standalone pipeline
+- Comparative evaluation of zero, median, and regression imputation
+- Controlled missingness experiments across five severity levels
+- Statistical comparisons across 20 random missingness injection seeds
+- Paired confidence intervals and recovery-performance visualizations
+- Safety validation using a deliberately harmful recovery candidate
+- Offline rejection and approved-state preservation
+- Standalone pipeline execution and reproducibility checks
+
+**Current focus:** Completing rigorous scientific validation of `BILL_AMT1` before expanding to other failure types.
+
+**Planned:** Interactive Streamlit dashboard for visualizing the system's behavior and research results.
+
+---
+
+## 2. Research Objectives
+
+The project has six primary objectives:
+
+1. Develop a machine learning baseline for credit-default prediction.
+2. Detect and diagnose controlled missing-data failures.
+3. Compare multiple recovery techniques and measure their effectiveness.
+4. Implement a safety mechanism that accepts or rejects candidate repairs.
+5. Evaluate reproducibility, statistical reliability, and the effects of failure severity.
+6. Investigate model resilience, feature relationships, and subgroup robustness.
+
+The overarching goal is to understand **when automated recovery is beneficial, when it is ineffective, and when the system should reject an attempted correction.**
+
+## 3. Research Questions and Hypotheses
 
 ### Primary Research Question
 
 To what extent can a self-healing machine learning system detect, diagnose, and recover from controlled missingness in `BILL_AMT1` while maintaining predictive performance, enforcing safety constraints, and producing reproducible results?
 
-### Supporting Research Questions
+| Hypothesis | Research Focus | Current Assessment |
+|---|---|---|
+| H1 | Missingness detection and predictive degradation | Partially supported; degradation depends on the metric and recovery strategy |
+| H2 | Recovery effectiveness | Mixed findings; different strategies optimize different metrics |
+| H3 | Safety validation and rejection | Partially supported by harmful-candidate rejection and offline approved-state preservation |
+| H4 | Missingness severity and feature relationships | Severity effects observed; contribution of feature redundancy requires further validation |
+| H5 | Reproducibility and statistical reliability | Supported under tested configurations using deterministic experiments and repeated seeds |
+| H6 | Subgroup robustness | Pending evaluation |
 
-**RQ1 — Failure Detection and Degradation**
+These assessments describe the evidence collected so far, not final confirmation of the hypotheses.
 
-How does increasing missingness in `BILL_AMT1` affect predictive performance, and can the system reliably detect missingness associated with meaningful degradation?
+---
 
-**H1:** Increasing missingness in `BILL_AMT1` produces measurable predictive degradation at one or more severity levels, and the detection mechanism identifies data-quality failures exceeding its monitoring threshold.
+## 4. Dataset
 
-**RQ2 — Recovery Effectiveness**
+**Dataset:** UCI Default of Credit Card Clients
 
-To what extent do different imputation strategies restore predictive performance compared with untreated or benchmark approaches?
+**Prediction task:** Predict whether a customer will default on credit-card payment in the following month.
 
-**H2:** At least one recovery strategy improves predictive performance relative to an appropriate control under one or more missingness conditions.
+### Dataset Characteristics
 
-**RQ3 — Safety Validation**
+| Attribute | Value |
+|---|---|
+| Observations | 30,000 |
+| Predictors | 23 |
+| Target | `default payment next month` |
+| Problem type | Binary classification |
+| Training observations | 21,000 |
+| Validation observations | 4,500 |
+| Test observations | 4,500 |
+| Primary failure feature | `BILL_AMT1` |
 
-Can the safety mechanism distinguish acceptable from unacceptable recovery candidates and preserve the approved state after rejection?
+The original dataset is preserved. Missing values are artificially injected into copies of the validation data.
 
-**H3:** The safety mechanism correctly accepts candidates satisfying predefined criteria and rejects candidates violating those criteria.
+The test dataset is reserved for final evaluation.
 
-**RQ4 — Missingness Severity and Feature Resilience**
+---
 
-How do missingness severity and relationships between `BILL_AMT1` and other predictors influence model degradation and recovery?
+## 5. Baseline Machine Learning Model
 
-**H4:** Missingness severity affects predictive performance and recovery effectiveness, while information retained in related predictors may reduce degradation.
+The baseline classifier uses **Logistic Regression** with standardized features.
 
-**RQ5 — Reproducibility and Statistical Reliability**
+### Healthy Validation Performance
 
-Are experimental outcomes reproducible and statistically reliable across repeated missingness injections?
+| Metric | Score |
+|---|---:|
+| Accuracy | 0.808667 |
+| Precision | 0.694767 |
+| Recall | 0.240201 |
+| F1-score | 0.356983 |
+| ROC-AUC | 0.713025 |
 
-**H5:** The experimental pipeline reproduces results under fixed configurations, and repeated experiments provide estimable uncertainty around degradation and recovery effects.
+**Primary evaluation metric:** F1-score
 
-**RQ6 — Subgroup Robustness**
+**Additional metrics:** Recall, precision, accuracy, and ROC-AUC.
 
-Does missingness affect predictive performance and recovery effectiveness differently across demographic subgroups?
+The primary classification threshold is 0.50.
 
-**H6:** The magnitude of predictive degradation and recovery effectiveness differs across at least some predefined demographic subgroups.
+The healthy validation performance serves as the reference for measuring changes following data corruption and recovery.
 
-These hypotheses represent claims to be tested rather than established findings.
+---
 
+## 6. SHML System Architecture
 
-### Phase 7 — System Integration and Standalone Pipeline
+The SHML framework follows seven main stages.
 
-**Status: Implemented; rigorous experimental validation pending**
+### Stage 1 — Healthy Baseline
 
-- Integrated failure detection, diagnosis, recovery, evaluation, and safety modules.
-- Developed the standalone execution pipeline in `src/run_pipeline.py`.
-- Verified dataset dimensions, splitting, and recorded baseline metrics.
-- Executed controlled `BILL_AMT1` missingness scenarios at 0%, 5%, 15%, and 30%.
-- Implemented deterministic reproducibility assertions and result exports.
-- Verified the existing pipeline against its recorded expected outcomes.
+Train and evaluate the original model to establish reference performance.
 
-These checks support consistency with the existing implementation but do not independently establish successful predictive recovery.
+### Stage 2 — Failure Injection
 
-### Current Research Milestone — Rigorous BILL_AMT1 Validation
+Introduce controlled missingness into `BILL_AMT1` at predefined severity levels.
 
-**Status: Planned; experimental audit is the next task**
+### Stage 3 — Failure Detection
 
-The project is moving from prototype development to rigorous scientific evaluation of the existing system, including controlled comparisons, repeated experiments, statistical validation, and detailed analysis of feature behavior.
+Monitor changes in missingness relative to a healthy reference.
 
+The current detector raises an alert when the increase in missingness is **strictly greater than 5 percentage points**.
 
-### Interpretation of Existing Results
+### Stage 4 — Failure Diagnosis
 
-The current `BILL_AMT1` experiment reports post-imputation F1-scores of approximately 0.3570, 0.3589, 0.3609, and 0.3737 at 0%, 5%, 15%, and 30% missingness, respectively.
+Identify the affected feature, missingness type, severity, and configured recovery action.
 
-These results demonstrate that the recovered validation batches maintained F1-scores at or above the recorded healthy baseline under the tested configuration.
+### Stage 5 — Recovery
 
-However, the experiment does not yet measure predictive performance on the corrupted data before recovery. Consequently, the observed F1 values cannot establish whether the recovery intervention improved performance relative to an untreated or benchmark condition.
+The current standalone pipeline applies training-median imputation.
 
-Additional experiments will investigate whether the apparent resilience results from feature redundancy, model sensitivity, imputation behavior, or random variation.
+The research notebook additionally compares:
 
+- Zero imputation
+- Training-median imputation
+- Regression-based imputation using `BILL_AMT2`
 
-## 9. Preliminary Observations and Open Research Questions
+### Stage 6 — Performance Evaluation
 
-1. **Missingness detection:** The rule-based detector identified missingness exceeding the configured 5-percentage-point threshold.
+Evaluate each candidate using F1-score, recall, ROC-AUC, and additional performance metrics.
 
-2. **Post-repair performance:** Recorded F1-scores remained near or above the healthy baseline in the formal `BILL_AMT1` experiment. The reason for this behavior requires further investigation.
+### Stage 7 — Safety Validation
 
-3. **Recovery effectiveness:** Before-versus-after recovery effectiveness has not yet been established using appropriate untreated and benchmark controls.
+Evaluate whether the candidate satisfies predefined safety conditions.
 
-4. **Safety behavior:** The offline safety mechanism generated acceptance decisions in the formal experiment. Simulated unsafe scenarios tested rejection behavior, but integrated rejection and rollback validation requires further work.
+The current safety controller allows a maximum relative loss of:
 
-5. **Reproducibility:** Earlier experiments demonstrated consistency under tested configurations. Statistical reliability across repeated missingness injections remains an open research objective.
+- **10% in F1**
+- **10% in recall**
 
-These observations motivate the next stage of controlled experimentation and should not be interpreted as confirmation of the research hypotheses.
+Candidates exceeding these limits are rejected.
 
+The system's current rollback demonstration is an offline selection mechanism rather than production deployment rollback.
 
-### Additional Research Limitations
+---
 
-- The standalone experiment does not explicitly compare untreated corrupted predictions against recovered predictions.
-- Current results are primarily based on one missingness injection seed and one validation split.
-- The effect of `BILL_AMT1` feature redundancy has not been thoroughly investigated.
-- Only training-median imputation is implemented in the formal recovery pipeline.
-- The scientific justification for the detection and safety thresholds requires further evaluation.
-- Existing safety tests do not fully demonstrate integrated rollback behavior.
-- Statistical confidence intervals and repeated-injection comparisons have not yet been completed.
-- Subgroup performance under missingness has not been rigorously evaluated.
-- Automated diagnosis has not been compared across multiple failure types.
-- Earlier exploratory and formal experimental configurations require provenance verification before their outcomes can be compared.
+## 7. Rigorous BILL_AMT1 Feature Investigation
 
+The research examines the statistical properties and predictive significance of `BILL_AMT1`.
 
+### Feature Analysis Findings
 
-## 13. Next Steps — Rigorous BILL_AMT1 Research
+| Property | Observation |
+|---|---:|
+| Training median | 22,225.5 |
+| Training mean | 51,194.22 |
+| Standard deviation | 73,633.98 |
+| Skewness | 2.6656 |
+| Correlation with `BILL_AMT2` | 0.9525 |
 
-The next research milestone is a systematic investigation of `BILL_AMT1` missingness before extending SHML to additional failure types.
+The feature exhibits substantial right skewness and strong correlations with other billing amount variables.
 
-### Phase A — Experimental Audit
+The relationship between `BILL_AMT1` and `BILL_AMT2` motivated the investigation of correlation-guided regression imputation.
 
-- Reproduce and verify existing baseline and experimental results.
-- Confirm data splits, preprocessing, classification thresholds, and experiment configurations.
-- Reconcile differences between exploratory and formal experiments.
-- Review safety decisions and reproducibility checks.
+### Regression-Based Reconstruction
 
-### Phase B — Feature Analysis
+A Linear Regression model estimates missing `BILL_AMT1` values using `BILL_AMT2`.
 
-- Investigate the distribution of `BILL_AMT1`.
-- Examine relationships with `BILL_AMT2` and other predictors.
-- Evaluate feature importance, coefficient behavior, and model sensitivity.
-- Investigate possible explanations for model resilience.
+The imputer was trained exclusively on the training dataset to avoid validation-data leakage.
 
-### Phase C — Controlled Recovery Experiments
+The training R² was approximately **0.9073**, indicating a strong linear relationship in the training data.
 
-- Evaluate missingness levels of 0%, 5%, 15%, 30%, and 60%.
-- Measure predictive performance before and after recovery.
-- Compare different imputation and benchmark strategies.
-- Quantify recovery effectiveness.
+This is a training-fit statistic rather than an independent measure of generalization.
 
-### Phase D — Statistical Validation
+---
 
-- Repeat missingness experiments using multiple random seeds.
-- Estimate confidence intervals and performance variability.
-- Analyze severity-response relationships.
-- Evaluate the justification and sensitivity of performance thresholds.
+## 8. Controlled Missingness Experiments
 
-### Phase E — Safety and Subgroup Validation
+The study evaluates five missingness levels:
 
-- Test integrated acceptance and rejection behavior.
-- Verify preservation of the approved state following rejection.
-- Evaluate performance across predefined demographic subgroups.
-- Review reproducibility and experimental robustness.
+- 0% — Healthy reference
+- 5% — Low missingness
+- 15% — Moderate missingness
+- 30% — High missingness
+- 60% — Severe missingness
 
-### Phase F — Research Documentation and Visualization
+Experiments were repeated using **20 random injection seeds**, with identical corruption masks across the competing recovery strategies.
 
-- Produce feature analysis and correlation visualizations.
-- Create missingness-versus-performance plots with uncertainty intervals.
-- Compare recovery strategies.
-- Visualize safety decisions.
-- Prepare the final hypothesis evidence matrix, research report, and capstone presentation.
+### Recovery Methods
 
-### Future Research
+**Zero imputation:** Replaces missing `BILL_AMT1` values with zero.
 
-Potential extensions include `PAY_0` categorical shift, `LIMIT_BAL` numerical drift, additional datasets, alternative machine-learning architectures, LLM/RAG-assisted diagnosis, and cloud deployment.
+**Median imputation:** Replaces missing values with the median calculated from the training dataset.
 
-## 14. Project Status
+**Regression imputation:** Predicts missing `BILL_AMT1` values using a regression model trained on `BILL_AMT2`.
 
-**Current stage:** Transition from implemented offline SHML prototype to rigorous experimental validation.
+Zero imputation serves as a simple benchmark intervention, not as a true untreated or no-recovery condition.
 
-**Current research feature:** `BILL_AMT1`
+---
 
-**Next milestone:** Phase A — Experimental Audit
+## 9. Experimental Results
 
-**Immediate deliverable:** A verified baseline, reconciled experimental results, and an auditable configuration for subsequent research experiments.
+### Mean F1-Score Across 20 Seeds
+
+| Missingness | Zero | Median | Regression |
+|---|---:|---:|---:|
+| 0% | 0.356983 | 0.356983 | 0.356983 |
+| 5% | 0.360792 | 0.359251 | 0.356887 |
+| 15% | 0.368320 | 0.364761 | 0.357321 |
+| 30% | 0.377667 | 0.368637 | 0.357428 |
+| 60% | 0.397203 | 0.382537 | 0.357287 |
+
+**Finding:** Zero imputation produced the highest mean F1-score at every nonzero missingness level using the predefined 0.50 classification threshold.
+
+### Mean ROC-AUC Across 20 Seeds
+
+| Missingness | Zero | Median | Regression |
+|---|---:|---:|---:|
+| 0% | 0.713025 | 0.713025 | 0.713025 |
+| 5% | 0.711718 | 0.712009 | 0.712957 |
+| 15% | 0.710679 | 0.711232 | 0.712912 |
+| 30% | 0.708555 | 0.709558 | 0.712699 |
+| 60% | 0.704121 | 0.705421 | 0.712546 |
+
+**Finding:** Regression imputation preserved ROC-AUC more effectively than the other strategies.
+
+### Interpretation
+
+The results demonstrate that recovery effectiveness depends on the evaluation criterion.
+
+Zero imputation achieved higher F1 at the fixed classification threshold, whereas regression imputation maintained performance closer to the healthy baseline in terms of ROC-AUC.
+
+The findings indicate that a recovery method should not automatically be considered superior because it is more sophisticated.
+
+The preferred approach depends on explicitly defined performance objectives and safety constraints.
+
+---
+
+## 10. Statistical Evaluation
+
+To assess the consistency of the findings, the recovery experiments were repeated across 20 missingness injection seeds.
+
+The analysis includes:
+
+- Paired recovery comparisons
+- Mean performance differences
+- Paired 95% confidence intervals
+- Recovery-method win counts
+- Missingness severity analysis
+
+### Selected Finding at 60% Missingness
+
+| Comparison | Mean F1 Difference |
+|---|---:|
+| Regression − Zero | −0.039916 |
+| Regression − Median | −0.025250 |
+| Median − Zero | −0.014666 |
+
+For ROC-AUC:
+
+| Comparison | Mean ROC-AUC Difference |
+|---|---:|
+| Regression − Zero | +0.008424 |
+| Regression − Median | +0.007124 |
+
+Regression imputation achieved higher ROC-AUC than both alternatives in all 20 seeds at 60% missingness.
+
+These confidence intervals quantify variation across the injection seeds for a fixed trained model and validation dataset.
+
+They do not establish population-level generalization uncertainty.
+
+---
+
+## 11. Safety Validation and Harmful Recovery Rejection
+
+A dedicated safety experiment was conducted to determine whether the SHML safety controller could reject a correction that significantly degraded predictive performance.
+
+### Experimental Configuration
+
+- Feature: `BILL_AMT1`
+- Missingness: 60%
+- Modified observations: 2,700
+- Injection seed: 42
+- Deliberately harmful replacement value: 1,000,000,000
+- Maximum permitted F1 loss: 10%
+- Maximum permitted recall loss: 10%
+
+### Results
+
+| Metric | Healthy | Harmful Candidate |
+|---|---:|---:|
+| Accuracy | 0.808667 | 0.790444 |
+| Precision | 0.694767 | 0.732143 |
+| Recall | 0.240201 | 0.082412 |
+| F1 | 0.356983 | 0.148148 |
+| ROC-AUC | 0.713025 | 0.535436 |
+
+### Safety Decision
+
+**REJECT**
+
+The controller detected:
+
+- Relative F1 loss: **58.50%**
+- Relative recall loss: **65.69%**
+
+Both exceeded the predefined 10% tolerance.
+
+### Offline Rollback Verification
+
+After the safety controller rejected the harmful candidate:
+
+- The candidate was not selected.
+- The previously approved validation batch was preserved.
+- The selected F1 remained 0.356983.
+
+This provides evidence that the existing safety mechanism can reject a severely harmful candidate based on actual evaluation results.
+
+However, the experiment uses a deliberately extreme replacement value, and the approved-state preservation is performed in memory.
+
+Production rollback and generalization to less extreme harmful repairs remain future work.
+
+---
+
+## 12. Repository Structure
+
+```text
+SHML/
+├── Readme.md
+├── requirements.txt
+├── data/
+│   └── working/
+├── src/
+│   ├── detection.py
+│   ├── diagnosis.py
+│   ├── recovery.py
+│   ├── evaluation.py
+│   ├── safety.py
+│   └── run_pipeline.py
+├── research/
+│   └── bill_amt1/
+│       ├── 01_audit.ipynb
+│       └── 02_recovery_experiments.ipynb
+├── results/
+├── docs/
+└── Phase1.ipynb
+```
+
+Additional notebooks document earlier phases, including preprocessing, baseline development, failure detection, diagnosis, recovery, validation, and system integration.
+
+---
+
+## 13. Running the Project
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/divyakapoor23/SHML.git
+cd SHML
+```
+
+### Install Dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+The full requirements file includes exploratory and future-extension libraries. Depending on the operating system and Python environment, some optional dependencies may require additional setup.
+
+### Run the Standalone Pipeline
+
+```bash
+python -m src.run_pipeline
+```
+
+The current standalone pipeline executes:
+
+1. Dataset verification
+2. Healthy baseline model training
+3. Missingness injection at 0%, 5%, 15%, and 30%
+4. Failure detection and diagnosis
+5. Median-based recovery
+6. Data integrity verification
+7. Performance evaluation
+8. Safety validation and result export
+
+Results are written to:
+
+```text
+results/phase7/standalone_pipeline_results.csv
+```
+
+### Run the Research Notebooks
+
+**Feature investigation:**
+
+```text
+research/bill_amt1/01_audit.ipynb
+```
+
+**Recovery experiments, statistical evaluation, and safety testing:**
+
+```text
+research/bill_amt1/02_recovery_experiments.ipynb
+```
+
+The extended 60% missingness scenarios and three-strategy comparisons are implemented in the research notebook rather than the standalone median-recovery pipeline.
+
+---
+
+## 14. Interactive Dashboard — Planned
+
+An interactive **Streamlit dashboard** is planned to present the SHML workflow and experimental findings in an accessible format.
+
+### Proposed Dashboard Features
+
+**System Overview**
+
+- Healthy model performance
+- Dataset information
+- Experimental configuration
+
+**Failure Injection**
+
+- Select `BILL_AMT1` missingness severity
+- Trigger a controlled experiment
+- Display missingness detection and diagnosis
+
+**Recovery Comparison**
+
+- Zero imputation
+- Median imputation
+- Regression imputation
+- F1 and ROC-AUC comparisons
+
+**Safety Validation**
+
+- Display acceptance and rejection decisions
+- Explain safety-gate outcomes
+- Demonstrate offline approved-state preservation
+
+**Research Results**
+
+- Performance visualizations
+- Missingness severity analysis
+- Statistical confidence intervals
+- Recovery strategy comparisons
+
+The dashboard will serve as a visualization and demonstration interface for the existing SHML experiments.
+
+The dashboard is not yet implemented. It will be connected to actual pipeline outputs or clearly labeled saved experimental results.
+
+---
+
+## 15. Current Limitations
+
+The project currently has several important limitations:
+
+1. **Untreated comparison:** A defensible no-recovery or fallback control remains necessary to quantify recovery benefit.
+2. **Single corrupted feature:** The academic investigation focuses on `BILL_AMT1`.
+3. **Automated strategy selection:** The standalone pipeline does not yet automatically evaluate and choose among all three recovery methods.
+4. **Safety testing:** Broader evaluation of realistic harmful candidates is required.
+5. **Subgroup evaluation:** Performance across predefined demographic subgroups remains untested.
+6. **Statistical generalization:** Current confidence intervals characterize variation across missingness masks on a fixed validation set.
+7. **Rollback:** The current implementation demonstrates offline approved-state preservation, not production deployment rollback.
+8. **Threshold justification:** The 5-percentage-point missingness detection threshold and 10% performance tolerances require additional sensitivity analysis.
+
+These limitations define the remaining research work and potential future extensions.
+
+---
+
+## 16. Next Steps
+
+### Remaining Academic Work
+
+- [x] Develop healthy baseline model
+- [x] Implement missingness detection and diagnosis
+- [x] Implement median-based recovery
+- [x] Investigate `BILL_AMT1` rigorously
+- [x] Compare three recovery strategies
+- [x] Repeat experiments across 20 seeds
+- [x] Calculate paired confidence intervals
+- [x] Test harmful recovery rejection
+- [x] Demonstrate offline approved-state preservation
+- [ ] Establish a defensible untreated or no-recovery comparison
+- [ ] Evaluate realistic harmful recovery candidates
+- [ ] Validate recovery safety across strategies and severity levels
+- [ ] Investigate threshold sensitivity
+- [ ] Perform subgroup robustness evaluation
+- [ ] Integrate automated recovery-candidate selection
+- [ ] Develop Streamlit dashboard
+- [ ] Complete final reproducibility verification
+- [ ] Prepare final research report and presentation
+
+### Future Extensions
+
+Potential future research directions include:
+
+- Categorical distribution shifts in `PAY_0`
+- Numerical drift in `LIMIT_BAL`
+- Additional datasets and classification models
+- LLM-assisted failure diagnosis
+- RAG-based research and diagnostic assistance
+- Agentic recovery planning
+- Persistent model rollback and model registries
+- Cloud deployment using Google Cloud Platform
+
+These extensions are outside the immediate single-feature academic research scope.
+
+---
+
+## 17. Preliminary Research Conclusion
+
+The experiments indicate that the effectiveness of recovery strategies depends on the performance metric and experimental conditions.
+
+Under controlled `BILL_AMT1` missingness, zero imputation achieved the highest F1-score at the original classification threshold, while regression imputation better preserved ROC-AUC.
+
+The safety controller successfully rejected a deliberately harmful candidate after detecting substantial degradation in F1 and recall, and an offline selection test preserved the previously approved state.
+
+These findings support the importance of **comparative recovery evaluation, explicit safety criteria, and evidence-based acceptance or rejection decisions** in self-healing machine learning systems.
+
+The research does not establish that every missing-data failure causes degradation or that automated recovery always improves performance.
+
+Instead, it investigates the conditions under which recovery is appropriate, effective, and safe.
+
+---
+
+## 18. Project Repository
+
+**GitHub:** https://github.com/divyakapoor23/SHML
+
+**Research area:** Machine Learning, Data Quality, Automated Recovery, Model Evaluation, and Reliable AI Systems.

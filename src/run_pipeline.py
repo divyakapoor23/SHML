@@ -1,3 +1,5 @@
+"""Run the Phase H offline recovery-policy validation."""
+
 from pathlib import Path
 import sys
 
@@ -73,6 +75,7 @@ def assess_candidate(
     expected_fill = 0 if action == "Zero imputation" else training_median
     integrity_passed = (
         X_candidate.shape == X_batch.shape
+        and X_candidate.index.equals(X_batch.index)
         and X_candidate.columns.equals(X_batch.columns)
         and not X_candidate.isna().any().any()
         and X_candidate.drop(columns=[FEATURE]).equals(
@@ -83,6 +86,16 @@ def assess_candidate(
         )
         and X_candidate.loc[missing_mask, FEATURE].eq(expected_fill).all()
     )
+
+    if not integrity_passed:
+        return {
+            "action": action,
+            "decision": "REJECT",
+            "reason": "Data integrity check failed",
+            "metrics": None,
+            "log": recovery_log,
+            "integrity": False,
+        }
 
     metrics = evaluate_model(
         X_batch=X_candidate,

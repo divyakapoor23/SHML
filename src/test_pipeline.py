@@ -1,14 +1,25 @@
+import io
 import sys
 import unittest
+from contextlib import redirect_stdout
+from math import isfinite
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src import run_pipeline
+from src.detection import detect_feature_missingness
+from src.diagnosis import diagnose_failure
+from src.evaluation import evaluate_model
+from src.recovery import recover_missingness
 from src.run_pipeline import select_recovery
 
 
@@ -108,6 +119,117 @@ class SelectRecoveryTests(unittest.TestCase):
             [call.args[3] for call in assess.call_args_list],
             ["Zero imputation", "Median imputation"],
         )
+
+
+class PipelineTests(unittest.TestCase):
+    def setUp(self):
+        self.healthy = pd.DataFrame(
+            {
+                "BILL_AMT1": [100.0 * (row + 1) for row in range(20)],
+                "BILL_AMT2": [300 + row for row in range(20)],
+            },
+            index=range(100, 120),
+        )
+        self.labels = pd.Series([0] * 10 + [1] * 10, index=self.healthy.index)
+        self.corrupted = run_pipeline.inject_missingness(self.healthy, 0.15)
+        self.diagnosis = diagnose_failure(
+            detect_feature_missingness(self.corrupted, "BILL_AMT1")
+        )
+        self.training_median = self.healthy["BILL_AMT1"].median()
+
+    def test_recovery_preserves_unaffected_columns_and_existing_values(self):
+        original = self.corrupted.copy(deep=True)
+        missing = original["BILL_AMT1"].isna()
+        for action, fill_value in (
+            ("Zero imputation", 0.0),
+            ("Median imputation", self.training_median),
+        ):
+            with self.subTest(action=action):
+                recovered, _ = recover_missingness(
+                    self.corrupted,
+                    {**self.diagnosis, "recovery_action": action},
+                    self.training_median,
+                )
+                expected = original.copy(deep=True)
+                expected.loc[missing, "BILL_AMT1"] = fill_value
+                pd.testing.assert_frame_equal(recovered, expected)
+                pd.testing.assert_frame_equal(self.corrupted, original)
+
+    def test_detection_and_diagnosis_at_configured_missingness_levels(self):
+        for rate, detected, severity, action in (
+            (0.00, False, "None", "No correction"),
+            (0.05, False, "Below alert threshold", "Routine median preprocessing"),
+            (0.15, True, "Moderate", "Median imputation"),
+            (0.30, True, "Severe", "Median imputation"),
+        ):
+            with self.subTest(rate=rate):
+                corrupted = run_pipeline.inject_missingness(self.healthy, rate)
+                detection = detect_feature_missingness(corrupted, "BILL_AMT1")
+                diagnosis = diagnose_failure(detection)
+
+                self.assertAlmostEqual(detection["current_missingness"], rate)
+                self.assertIs(detection["failure_detected"], detected)
+                self.assertIs(diagnosis["failure_detected"], detected)
+                self.assertEqual(diagnosis["severity"], severity)
+                self.assertEqual(diagnosis["recovery_action"], action)
+
+    def test_zero_and_median_imputation_produce_valid_metrics(self):
+        scaler = StandardScaler()
+        scaled = scaler.fit_transform(self.healthy)
+        model = LogisticRegression(random_state=42).fit(scaled, self.labels)
+        healthy_metrics = evaluate_model(self.healthy, self.labels, model, scaler)
+        for action in ("Zero imputation", "Median imputation"):
+            with self.subTest(action=action):
+                evaluated = run_pipeline.assess_candidate(
+                    self.corrupted, self.labels, self.diagnosis, action,
+                    self.training_median, healthy_metrics, model, scaler,
+                )
+                self.assertTrue(evaluated["integrity"])
+                self.assertEqual(evaluated["log"]["values_imputed"], 3)
+                metrics = evaluated["metrics"]
+                self.assertEqual(
+                    set(metrics), {"accuracy", "precision", "recall", "f1", "roc_auc"}
+                )
+                for name, value in metrics.items():
+                    self.assertTrue(isfinite(value) and 0 <= value <= 1, (name, value))
+
+    def test_safety_rejects_unsafe_candidate_and_selects_safe_fallback(self):
+        healthy_metrics = dict.fromkeys(
+            ("accuracy", "precision", "recall", "f1", "roc_auc"), 0.8
+        )
+        unsafe_metrics = {**healthy_metrics, "f1": 0.5}
+        with patch.object(
+            run_pipeline, "evaluate_model",
+            side_effect=[unsafe_metrics, healthy_metrics],
+        ):
+            chosen, preferred, fallback, status = select_recovery(
+                self.corrupted, self.labels, self.diagnosis,
+                self.training_median, healthy_metrics, object(), object(),
+            )
+
+        self.assertTrue(preferred["integrity"])
+        self.assertEqual(preferred["action"], "Zero imputation")
+        self.assertEqual(preferred["decision"], "REJECT")
+        self.assertIn("F1 loss exceeds tolerance", preferred["reason"])
+        self.assertEqual(status, "FALLBACK_ACCEPTED")
+        self.assertIs(chosen, fallback)
+        self.assertEqual(chosen["action"], "Median imputation")
+        self.assertEqual(chosen["decision"], "ACCEPT")
+
+    def test_repeated_pipeline_runs_produce_identical_results(self):
+        with TemporaryDirectory() as directory, redirect_stdout(io.StringIO()):
+            output_dir = Path(directory)
+            with patch.object(run_pipeline, "OUTPUT_DIR", output_dir / "first"):
+                first = run_pipeline.main()
+            with patch.object(run_pipeline, "OUTPUT_DIR", output_dir / "second"):
+                second = run_pipeline.main()
+
+            pd.testing.assert_frame_equal(first, second, check_exact=True)
+            csv_name = "recovery_policy_validation_results.csv"
+            self.assertEqual(
+                (output_dir / "first" / csv_name).read_bytes(),
+                (output_dir / "second" / csv_name).read_bytes(),
+            )
 
 
 if __name__ == "__main__":

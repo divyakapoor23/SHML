@@ -28,7 +28,8 @@ def recover_missingness(
     supported_actions = {
         "No correction",
         "Routine median preprocessing",
-        "Median imputation"
+        "Median imputation",
+        "Zero imputation"
     }
 
     if action not in supported_actions:
@@ -44,6 +45,10 @@ def recover_missingness(
 
     missing_after = int(
         X_recovered[feature].isna().sum()
+    )
+    if action == "Zero imputation":
+        X_recovered[feature] = (
+        X_recovered[feature].fillna(0)
     )
 
     recovery_log = {

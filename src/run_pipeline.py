@@ -59,6 +59,7 @@ def assess_candidate(
     healthy_metrics,
     model,
     scaler,
+    max_auc_loss = None,
 ):
     candidate_diagnosis = {
         **diagnosis,
@@ -107,6 +108,7 @@ def assess_candidate(
         recovered_metrics=metrics,
         healthy_metrics=healthy_metrics,
         data_integrity_passed=integrity_passed,
+        max_auc_loss=max_auc_loss,
     )
     return {
         "action": action,
@@ -126,6 +128,7 @@ def select_recovery(
     healthy_metrics,
     model,
     scaler,
+    max_auc_loss=None,
 ):
     if not X_corrupted[FEATURE].isna().any():
         chosen = assess_candidate(

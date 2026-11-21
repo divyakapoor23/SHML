@@ -21,6 +21,7 @@ from src.diagnosis import diagnose_failure
 from src.evaluation import evaluate_model
 from src.recovery import recover_missingness
 from src.run_pipeline import select_recovery
+from src.safety import evaluate_recovery_safety
 
 
 def candidate(action, decision):
@@ -216,6 +217,37 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(chosen["action"], "Median imputation")
         self.assertEqual(chosen["decision"], "ACCEPT")
 
+    def test_optional_roc_auc_guardrail_rejects_recovery(self):
+        healthy = {
+            "accuracy": 0.80,
+            "precision": 0.70,
+            "recall": 0.25,
+            "f1": 0.36,
+            "roc_auc": 0.713,
+        }
+        recovered = {
+            "accuracy": 0.81,
+            "precision": 0.69,
+            "recall": 0.26,
+            "f1": 0.37,
+            "roc_auc": 0.708,
+        }
+
+        original = evaluate_recovery_safety(recovered, healthy, True)
+        combined = evaluate_recovery_safety(
+            recovered, healthy, True, max_auc_loss=0.005
+        )
+
+        print("Original policy:", original["decision"])
+        print("Combined policy:", combined["decision"])
+        print("Reason:", combined["reason"])
+        print("ROC-AUC loss (%):", round(combined["auc_loss_pct"], 4))
+
+        self.assertEqual(original["decision"], "ACCEPT")
+        self.assertEqual(combined["decision"], "REJECT")
+        self.assertEqual(combined["reason"], "ROC-AUC loss exceeds tolerance")
+        self.assertAlmostEqual(combined["auc_loss_pct"], 0.7013, places=4)
+
     def test_repeated_pipeline_runs_produce_identical_results(self):
         with TemporaryDirectory() as directory, redirect_stdout(io.StringIO()):
             output_dir = Path(directory)
@@ -230,6 +262,50 @@ class PipelineTests(unittest.TestCase):
                 (output_dir / "first" / csv_name).read_bytes(),
                 (output_dir / "second" / csv_name).read_bytes(),
             )
+
+class AUCSafetyGuardrailTests(unittest.TestCase):
+
+    def test_auc_guardrail_rejects_unsafe_candidate(self):
+        healthy = {
+            "accuracy": 0.80,
+            "precision": 0.70,
+            "recall": 0.25,
+            "f1": 0.36,
+            "roc_auc": 0.713
+        }
+
+        recovered = {
+            "accuracy": 0.81,
+            "precision": 0.69,
+            "recall": 0.26,
+            "f1": 0.37,
+            "roc_auc": 0.708
+        }
+
+        # Original safety policy
+        original = evaluate_recovery_safety(
+            recovered, healthy, True
+        )
+
+        # Experimental ROC-AUC safety policy
+        combined = evaluate_recovery_safety(
+            recovered, healthy, True,
+            max_auc_loss=0.005
+        )
+
+        self.assertEqual(original["decision"], "ACCEPT")
+        self.assertEqual(combined["decision"], "REJECT")
+
+        self.assertIn(
+            "ROC-AUC loss exceeds tolerance",
+            combined["reason"]
+        )
+
+        self.assertAlmostEqual(
+            combined["auc_loss_pct"],
+            0.701262,
+            places=4
+        )
 
 
 if __name__ == "__main__":

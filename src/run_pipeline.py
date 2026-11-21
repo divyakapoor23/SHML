@@ -105,6 +105,38 @@ def assess_candidate(
     }
 
 
+def select_recovery(
+    X_corrupted,
+    y_val,
+    diagnosis,
+    training_median,
+    healthy_metrics,
+    model,
+    scaler,
+):
+    if not X_corrupted[FEATURE].isna().any():
+        chosen = assess_candidate(
+            X_corrupted, y_val, diagnosis, "No correction",
+            training_median, healthy_metrics, model, scaler,
+        )
+        return chosen, chosen, None, "NO_REPAIR_NEEDED"
+
+    preferred = assess_candidate(
+        X_corrupted, y_val, diagnosis, "Zero imputation",
+        training_median, healthy_metrics, model, scaler,
+    )
+    if preferred["decision"] == "ACCEPT":
+        return preferred, preferred, None, "PREFERRED_ACCEPTED"
+
+    fallback = assess_candidate(
+        X_corrupted, y_val, diagnosis, "Median imputation",
+        training_median, healthy_metrics, model, scaler,
+    )
+    if fallback["decision"] == "ACCEPT":
+        return fallback, preferred, fallback, "FALLBACK_ACCEPTED"
+    return None, preferred, fallback, "NO_SAFE_RECOVERY_ABSTAIN"
+
+
 def main():
     print("SHML Phase H offline recovery pipeline starting...")
     if not DATA_PATH.exists():
@@ -153,39 +185,17 @@ def main():
         # Preserve the 5% detector boundary (strict > 5%, not >= 5%).
         assert detection["failure_detected"] == (rate > 0.05)
 
-        if not X_corrupted[FEATURE].isna().any():
-            chosen = assess_candidate(
-                X_corrupted, y_val, diagnosis, "No correction",
-                training_median, healthy_metrics, model, scaler,
-            )
-            preferred = chosen
-            fallback = None
-            status = "NO_REPAIR_NEEDED"
-        else:
-            # Apply the validation-selected policy independently of the
-            # diagnosis's historical median-only recovery suggestion.
-            preferred = assess_candidate(
-                X_corrupted, y_val, diagnosis, "Zero imputation",
-                training_median, healthy_metrics, model, scaler,
-            )
-            fallback = None
-            if preferred["decision"] == "ACCEPT":
-                chosen = preferred
-                status = "PREFERRED_ACCEPTED"
-            else:
-                fallback = assess_candidate(
-                    X_corrupted, y_val, diagnosis, "Median imputation",
-                    training_median, healthy_metrics, model, scaler,
-                )
-                if fallback["decision"] == "ACCEPT":
-                    chosen = fallback
-                    status = "FALLBACK_ACCEPTED"
-                else:
-                    # No approved repaired batch. Do not score the NaN batch
-                    # and do not substitute the healthy reference as if it
-                    # were an available runtime input.
-                    chosen = None
-                    status = "NO_SAFE_RECOVERY_ABSTAIN"
+        # Apply the validation-selected policy independently of the
+        # diagnosis's historical median-only recovery suggestion.
+        chosen, preferred, fallback, status = select_recovery(
+            X_corrupted=X_corrupted,
+            y_val=y_val,
+            diagnosis=diagnosis,
+            training_median=training_median,
+            healthy_metrics=healthy_metrics,
+            model=model,
+            scaler=scaler,
+        )
 
         metrics = chosen["metrics"] if chosen is not None else None
         record = {

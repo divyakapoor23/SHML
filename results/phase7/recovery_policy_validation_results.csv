@@ -1,0 +1,5 @@
+missingness,detected,severity,status,selected_strategy,preferred_decision,preferred_reason,fallback_decision,fallback_reason,values_imputed,integrity_passed,f1,recall,roc_auc
+0.0,False,None,NO_REPAIR_NEEDED,No correction,ACCEPT,All checks passed,NOT_EVALUATED,,0,True,0.3569828230022405,0.24020100502512562,0.7130253263464255
+0.05,False,Below alert threshold,PREFERRED_ACCEPTED,Zero imputation,ACCEPT,All checks passed,NOT_EVALUATED,,225,True,0.3613382899628253,0.2442211055276382,0.7135546491372698
+0.15,True,Moderate,PREFERRED_ACCEPTED,Zero imputation,ACCEPT,All checks passed,NOT_EVALUATED,,675,True,0.36644591611479027,0.25025125628140704,0.7082720306238754
+0.3,True,Severe,PREFERRED_ACCEPTED,Zero imputation,ACCEPT,All checks passed,NOT_EVALUATED,,1350,True,0.384115523465704,0.26733668341708544,0.7105206488935404

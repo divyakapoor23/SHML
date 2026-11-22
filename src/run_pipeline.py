@@ -29,6 +29,7 @@ DATA_PATH = (
 OUTPUT_DIR = PROJECT_ROOT / "results" / "phase7"
 FEATURE = "BILL_AMT1"
 MISSINGNESS_LEVELS = [0.00, 0.05, 0.15, 0.30]
+MAX_AUC_LOSS = 0.005
 
 
 def inject_missingness(X_batch, rate):
@@ -214,6 +215,7 @@ def main():
             healthy_metrics=healthy_metrics,
             model=model,
             scaler=scaler,
+            max_auc_loss=MAX_AUC_LOSS,
         )
 
         metrics = chosen["metrics"] if chosen is not None else None

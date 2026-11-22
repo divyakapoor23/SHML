@@ -3,7 +3,7 @@
 ## Purpose
 
 This dataset contract defines the expected structure, characteristics,
-and data-quality requirements of the healthy Trial 1 dataset.
+and data-quality requirements of the healthy Trial 1 dataset. The UCI workbook used as the reference contains no missing values. Trial 1 creates missing-data scenarios by masking values in experimental copies.
 
 The contract will serve as the reference state for detecting data failures
 before the self-healing system applies corrective actions.

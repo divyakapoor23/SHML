@@ -4,14 +4,15 @@
 ## Research Scope
 
 This experiment evaluates a Self-Healing Machine Learning
-system for detecting and responding to missing values in
-BILL_AMT1 using the UCI Default of Credit Card Clients dataset.
+system for detecting and responding to deliberately injected
+BILL_AMT1 missingness using the UCI Default of Credit Card Clients workbook.
 
 ## Dataset
 
 - Total observations: 30,000
 - Predictors: 23
 - Target: Default payment next month
+- Missing values in the source workbook: 0
 
 ## Data Partitioning
 
@@ -30,7 +31,8 @@ BILL_AMT1 using the UCI Default of Credit Card Clients dataset.
 ## Failure Injection
 
 - Feature: BILL_AMT1
-- Failure type: Randomly injected missing values
+- Failure type: Randomly injected missing values in copies of the validation features
+- Held-out evaluation: Separate masks applied to copies of the test features after the policy is frozen
 - Missingness levels: 0%, 5%, 15%, and 30%
 - Detection threshold: greater than 5%
 - Random seeds: 0–19 for repeated-seed validation
@@ -74,7 +76,7 @@ At 15% BILL_AMT1 missingness across 20 seeds:
 - Recovery selection uses validation labels in an offline
   research setting.
 - Missingness did not produce consistent F1 degradation.
-- Missingness masks are repeated on the same validation set.
+- The masks simulate Missing Completely at Random on copies of a fixed validation set. Performance under naturally occurring missingness remains untested.
 - The 0.5% ROC-AUC guardrail was explored on validation data.
 - Results do not establish deployment-time autonomous healing.
 

@@ -12,7 +12,7 @@ Establish a reproducible healthy machine-learning baseline and implement a featu
 Phase 3 addresses two research questions:
 
 1. How well does the baseline model predict credit default under healthy data conditions?
-2. Can the system detect controlled missingness in an incoming validation batch?
+2. Can the system detect deliberately injected missingness in a validation batch?
 
 ## 2. Experimental Configuration
 
@@ -74,7 +74,7 @@ F1-score and positive-class recall were therefore selected as important measures
 
 ## 5. Controlled Failure Injection
 
-Missing values were injected exclusively into BILL_AMT1 within the validation dataset.
+The UCI workbook contained no missing values. Phase 3 deliberately masked only BILL_AMT1 in copies of the validation features.
 
 | Scenario | Injected Missingness | Observed Missingness |
 |---|---:|---:|

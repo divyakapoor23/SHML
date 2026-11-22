@@ -5,7 +5,7 @@ Automated Diagnosis and Recovery of Feature-Specific Missingness
 
 ## Research Objective
 
-Evaluate whether a rule-based Self-Healing Machine Learning (SHML) pipeline can automatically detect, diagnose, and correct feature-specific missingness in incoming validation data without manual intervention during pipeline execution.
+Evaluate whether a rule-based Self-Healing Machine Learning (SHML) pipeline can automatically detect, diagnose, and correct deliberately injected BILL_AMT1 missingness in copies of the complete validation features without manual intervention during pipeline execution.
 
 The experiment also examines the consistency, reproducibility, and traceability of the integrated detection, diagnosis, and recovery components.
 
@@ -20,7 +20,7 @@ The experiment also examines the consistency, reproducibility, and traceability 
 | Validation samples | 4,500 |
 | Test samples | 4,500 (reserved) |
 | Monitored feature | BILL_AMT1 |
-| Failure type | Numerical missingness |
+| Failure type | Simulated numerical missingness |
 | Healthy reference missingness | 0% |
 | Missingness scenarios | 0%, 5%, 15%, 30% |
 | Detection threshold | Greater than 5 percentage points |

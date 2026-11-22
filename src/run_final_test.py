@@ -1,5 +1,5 @@
 
-"""Final held-out evaluation of the frozen SHML recovery strategies."""
+"""Evaluate frozen SHML strategies on held-out copies with simulated missingness."""
 
 from pathlib import Path
 

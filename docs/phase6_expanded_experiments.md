@@ -59,7 +59,7 @@ The experiment uses the same dataset and model configuration established in earl
 | Maximum relative F1 loss | 10% |
 | Maximum relative recall loss | 10% |
 
-The missingness experiments operate on copies of the validation dataset. The original dataset remains unchanged.
+The UCI source workbook contained no missing values. The reproduced experiments deliberately mask BILL_AMT1 values in copies of the validation features.
 
 The training data is used to fit the scaler and Logistic Regression model and to calculate the median used for recovery.
 

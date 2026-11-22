@@ -18,7 +18,7 @@ Evaluate whether the Self-Healing Machine Learning (SHML) pipeline produces cons
 - **Recovery method:** Training-median imputation
 - **Safety tolerance:** 10% relative performance degradation
 
-The same standalone SHML workflow was executed in both environments.
+Both environments used the same complete UCI workbook and the same standalone workflow. Missingness was introduced only in copies of the validation features.
 
 ## 3. Computing Environments
 
@@ -60,7 +60,7 @@ The comparison passed without errors, confirming exact equality of the parsed CS
 
 The experiment demonstrates reproducible execution of the tested SHML workflow across macOS and Ubuntu Linux.
 
-The results support automated detection and correction of missing values, together with evaluation and safety-based acceptance of recovery candidates.
+The results support automated detection and correction of deliberately injected missingness, together with evaluation and safety-based acceptance of recovery candidates.
 
 However, the experiments do not establish that predictive performance first degraded and was subsequently restored. All four corrected scenarios satisfied the safety acceptance criteria.
 

@@ -6,7 +6,7 @@ Predictive Performance Validation and Safety Evaluation Following Automated Miss
 
 ## Research Objective
 
-Evaluate whether the SHML system preserves acceptable predictive performance after correcting feature-specific missingness and whether predefined safety criteria can prevent unacceptable recovery outcomes from being approved.
+Evaluate whether the SHML system preserves acceptable predictive performance after correcting deliberately injected BILL_AMT1 missingness in copies of the complete validation features and whether predefined safety criteria can prevent unacceptable recovery outcomes from being approved.
 
 ## Research Questions
 
@@ -23,7 +23,7 @@ Evaluate whether the SHML system preserves acceptable predictive performance aft
 | Baseline model | Logistic Regression |
 | Validation samples | 4,500 |
 | Monitored feature | BILL_AMT1 |
-| Failure type | Numerical missingness |
+| Failure type | Simulated numerical missingness |
 | Missingness scenarios | 0%, 5%, 15%, 30% |
 | Recovery method | Training-median imputation |
 | Training median | 22,225.5 |

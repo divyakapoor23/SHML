@@ -3,9 +3,7 @@
 
 ## Experimental Scope
 
-This evaluation examines controlled missingness in
-BILL_AMT1 using the UCI Default of Credit Card Clients
-dataset and a Logistic Regression classifier.
+The UCI Default of Credit Card Clients workbook contained no missing values. This evaluation uses Logistic Regression to study the effects of deliberately masking BILL_AMT1 values in copies of the validation and held-out test features.
 
 The project uses 21,000 training, 4,500 validation,
 and 4,500 test observations.
@@ -68,8 +66,7 @@ fallback behavior, not production model rollback.
 
 Status: Partially supported
 
-Increasing BILL_AMT1 missingness produced declining
-ROC-AUC in the held-out test experiment.
+ROC-AUC declined as the proportion of injected BILL_AMT1 missingness increased in the held-out experiment.
 
 However, F1 increased with missingness under both
 evaluated imputation strategies.

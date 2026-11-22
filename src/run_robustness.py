@@ -101,7 +101,7 @@ def prepare_validation_data():
 
 
 def run_experiment():
-    """Run 20 independently seeded missingness masks."""
+    """Inject 20 seeded missingness masks into copies of the validation features."""
 
     (
         X_val,
@@ -114,7 +114,7 @@ def run_experiment():
 
     print("SHML Integrated Robustness Experiment")
     print("Feature:", FEATURE)
-    print("Missingness:", MISSINGNESS_RATE)
+    print("Injected missingness:", MISSINGNESS_RATE)
     print("Seeds:", len(SEEDS))
     print("Healthy F1:", round(healthy_metrics["f1"], 6))
     print("Healthy ROC-AUC:",

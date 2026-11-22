@@ -4,11 +4,11 @@
 - **Feature:** `BILL_AMT1`
 - **Description:** Most recent bill statement amount
 - **Data type:** Numerical
-- **Monitoring purpose:** Detect missing values in incoming data batches
+- **Monitoring purpose:** Detect deliberately injected missingness in experimental batches
 
 ### Healthy Training Reference
 - Training observations: 21,000
-- Reference missingness: 0%
+- Source workbook and healthy training reference: 0% missingness
 - Mean: 51,194.22
 - Median: 22,225.50
 - Standard deviation: 73,633.98
@@ -48,7 +48,7 @@ If the correction fails the acceptance criteria, the system will reject it and r
 
 - Established a logistic regression baseline using a stratified 70/15/15 training, validation, and test split with random seed 42.
 - Evaluated healthy baseline performance on the validation set.
-- Injected missing values across all 23 predictor features at overall rates of 5%, 15%, and 30%.
+- Injected missing values into copies of the complete validation features at overall rates of 5%, 15%, and 30% across all 23 predictors.
 - Implemented an overall missingness-rate detector and an inference-success check.
 - Applied median imputation fitted on healthy training data.
 - Evaluated corrected validation batches using F1, recall, ROC-AUC, and accuracy.
@@ -67,7 +67,7 @@ If the correction fails the acceptance criteria, the system will reject it and r
 **Planned for Later Phases**
 
 - Implement and evaluate feature-specific missingness injection into `BILL_AMT1`.
-- Test the proposed `BILL_AMT1` detection rule on actual corrupted batches.
+- Test the proposed `BILL_AMT1` detection rule on validation copies with injected missingness.
 - Evaluate detection reliability, including missed failures and false alerts.
 - Investigate numerical drift and categorical shift using controlled experiments.
 - Formalize recovery acceptance criteria, including a critical-class recall guardrail.

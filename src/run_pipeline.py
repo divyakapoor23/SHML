@@ -1,4 +1,4 @@
-"""Run the Phase H offline recovery-policy validation."""
+"""Validate the Phase H recovery policy using simulated missingness."""
 
 from pathlib import Path
 import sys
@@ -34,7 +34,7 @@ MAX_AUC_LOSS = 0.005
 
 def inject_missingness(X_batch, rate, seed=42):
     """
-    Inject reproducible missingness into BILL_AMT1.
+    Deliberately mask BILL_AMT1 values in a copy of the input batch.
 
     The default seed=42 preserves previous
     pipeline behavior.
@@ -177,6 +177,7 @@ def select_recovery(
 
 
 def main():
+    """Evaluate simulated missingness on copies of complete validation data."""
     print("SHML Phase H offline recovery pipeline starting...")
     if not DATA_PATH.exists():
         raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")

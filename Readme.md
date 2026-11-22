@@ -6,7 +6,7 @@
 
 This project investigates whether a machine learning system can automatically detect data-quality failures, diagnose their causes, evaluate recovery strategies, and safely accept or reject corrective actions.
 
-The research focuses on controlled missingness in the `BILL_AMT1` feature of the **UCI Default of Credit Card Clients** dataset, using Logistic Regression as the baseline classifier.
+The **UCI Default of Credit Card Clients** workbook used in this project contains no missing values. The research uses Logistic Regression as the baseline classifier and tests how SHML responds when researchers deliberately mask `BILL_AMT1` values in experimental copies.
 
 The project aims to answer an important question:
 
@@ -41,7 +41,7 @@ The following components have been implemented or experimentally evaluated:
 The project has six primary objectives:
 
 1. Develop a machine learning baseline for credit-default prediction.
-2. Detect and diagnose controlled missing-data failures.
+2. Detect and diagnose deliberately injected missingness.
 3. Compare multiple recovery techniques and measure their effectiveness.
 4. Implement a safety mechanism that accepts or rejects candidate repairs.
 5. Evaluate reproducibility, statistical reliability, and the effects of failure severity.
@@ -53,7 +53,7 @@ The overarching goal is to understand **when automated recovery is beneficial, w
 
 ### Primary Research Question
 
-To what extent can a self-healing machine learning system detect, diagnose, and recover from controlled missingness in `BILL_AMT1` while maintaining predictive performance, enforcing safety constraints, and producing reproducible results?
+To what extent can a self-healing machine learning system detect, diagnose, and respond to deliberately injected `BILL_AMT1` missingness while maintaining predictive performance, enforcing safety constraints, and producing reproducible results?
 
 | Hypothesis | Research Focus | Current Assessment |
 |---|---|---|
@@ -85,11 +85,10 @@ These assessments describe the evidence collected so far, not final confirmation
 | Training observations | 21,000 |
 | Validation observations | 4,500 |
 | Test observations | 4,500 |
-| Primary failure feature | `BILL_AMT1` |
+| Missing values in the source workbook | 0 |
+| Main feature selected for simulated missingness | `BILL_AMT1` |
 
-The original dataset is preserved. Missing values are artificially injected into copies of the validation data.
-
-The test dataset is reserved for final evaluation.
+The source workbook and original data partitions are preserved. Development experiments mask values in copies of the validation features. The held-out evaluation applies its own masks to copies of the test features after the recovery strategies and safety thresholds are frozen.
 
 ---
 
@@ -127,11 +126,11 @@ Train and evaluate the original model to establish reference performance.
 
 ### Stage 2 — Failure Injection
 
-Introduce controlled missingness into `BILL_AMT1` at predefined severity levels.
+Copy the validation feature matrix and deliberately mask `BILL_AMT1` values at predefined rates. The 0% scenario uses the unmodified values as a reference.
 
 ### Stage 3 — Failure Detection
 
-Monitor changes in missingness relative to a healthy reference.
+Measure missingness in each experimental batch relative to the complete reference.
 
 The current detector raises an alert when the increase in missingness is **strictly greater than 5 percentage points**.
 
@@ -200,7 +199,7 @@ This is a training-fit statistic rather than an independent measure of generaliz
 
 ## 8. Controlled Missingness Experiments
 
-The study evaluates five missingness levels:
+The research experiments evaluate five injected missingness levels on copies of the validation features:
 
 - 0% — Healthy reference
 - 5% — Low missingness
@@ -487,7 +486,7 @@ The dashboard is not yet implemented. It will be connected to actual pipeline ou
 The project currently has several important limitations:
 
 1. **Untreated comparison:** A defensible no-recovery or fallback control remains necessary to quantify recovery benefit.
-2. **Single corrupted feature:** The academic investigation focuses on `BILL_AMT1`.
+2. **Simulated missingness:** The main investigation randomly masks only `BILL_AMT1` in copies of complete data. Performance under naturally occurring missingness remains untested.
 3. **Automated strategy selection:** The standalone pipeline does not yet automatically evaluate and choose among all three recovery methods.
 4. **Safety testing:** Broader evaluation of realistic harmful candidates is required.
 5. **Subgroup evaluation:** Performance across predefined demographic subgroups remains untested.
@@ -543,7 +542,7 @@ These extensions are outside the immediate single-feature academic research scop
 
 The experiments indicate that the effectiveness of recovery strategies depends on the performance metric and experimental conditions.
 
-Under controlled `BILL_AMT1` missingness, zero imputation achieved the highest F1-score at the original classification threshold, while regression imputation better preserved ROC-AUC.
+Under the simulated `BILL_AMT1` masks, zero imputation achieved the highest F1-score at the original classification threshold, while regression imputation better preserved ROC-AUC.
 
 The safety controller successfully rejected a deliberately harmful candidate after detecting substantial degradation in F1 and recall, and an offline selection test preserved the previously approved state.
 

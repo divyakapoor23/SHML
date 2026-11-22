@@ -1,4 +1,5 @@
 # ── CORE DATA HANDLING (all phases) ─────────────────────────
+streamlit
 pandas==2.2.3
 xlrd==2.0.2
 numpy==2.3.4

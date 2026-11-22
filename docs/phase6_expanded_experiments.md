@@ -384,7 +384,7 @@ The Phase 6 experiment is implemented in:
 
 ### Execution Procedure
 
-1. Install the dependencies listed in `requirements.txt`.
+1. Install the dependencies listed in `requirements-research.txt`.
 2. Make the UCI credit-default dataset available in the expected local data directory.
 3. Open the Phase 6 notebook from the repository root.
 4. Execute the notebook cells in order.

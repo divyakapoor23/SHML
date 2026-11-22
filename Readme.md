@@ -358,6 +358,7 @@ SHML/
 ├── Readme.md
 ├── requirements.txt
 ├── requirements-cloud.txt
+├── requirements-research.txt
 ├── data/
 │   └── working/
 ├── src/
@@ -399,7 +400,7 @@ Use Python 3.12 to reproduce the tested command-line environment. Run the comman
 python -m pip install -r requirements-cloud.txt
 ```
 
-For the research notebooks, install JupyterLab and Plotly with `python -m pip install jupyterlab plotly==6.8.0`. The full [requirements file](requirements.txt) includes dependencies for the earlier exploratory notebooks and optional extensions.
+For the research notebooks, install JupyterLab and Plotly with `python -m pip install jupyterlab plotly==6.8.0`. The full [research requirements](requirements-research.txt) include dependencies for the earlier exploratory notebooks and optional extensions.
 
 ### Run the Experiments
 
@@ -452,9 +453,11 @@ The [Streamlit app](app.py) visualizes saved SHML results. Its four tabs cover t
 From the repository root:
 
 ```bash
-python -m pip install streamlit==1.58.0 plotly==6.8.0 pandas==2.2.3
+python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
+
+Streamlit Community Cloud uses `app.py` as its entry point and the root `requirements.txt` for dashboard dependencies.
 
 ---
 

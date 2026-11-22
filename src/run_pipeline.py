@@ -134,12 +134,14 @@ def select_recovery(
         chosen = assess_candidate(
             X_corrupted, y_val, diagnosis, "No correction",
             training_median, healthy_metrics, model, scaler,
+            max_auc_loss=max_auc_loss,
         )
         return chosen, chosen, None, "NO_REPAIR_NEEDED"
 
     preferred = assess_candidate(
         X_corrupted, y_val, diagnosis, "Zero imputation",
         training_median, healthy_metrics, model, scaler,
+        max_auc_loss=max_auc_loss,
     )
     if preferred["decision"] == "ACCEPT":
         return preferred, preferred, None, "PREFERRED_ACCEPTED"
@@ -147,6 +149,7 @@ def select_recovery(
     fallback = assess_candidate(
         X_corrupted, y_val, diagnosis, "Median imputation",
         training_median, healthy_metrics, model, scaler,
+        max_auc_loss=max_auc_loss,
     )
     if fallback["decision"] == "ACCEPT":
         return fallback, preferred, fallback, "FALLBACK_ACCEPTED"

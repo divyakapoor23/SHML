@@ -60,7 +60,7 @@ def assess_candidate(
     healthy_metrics,
     model,
     scaler,
-    max_auc_loss = None,
+    max_auc_loss=None,
 ):
     candidate_diagnosis = {
         **diagnosis,

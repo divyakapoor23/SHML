@@ -32,22 +32,41 @@ MISSINGNESS_LEVELS = [0.00, 0.05, 0.15, 0.30]
 MAX_AUC_LOSS = 0.005
 
 
-def inject_missingness(X_batch, rate):
+def inject_missingness(X_batch, rate, seed=42):
+    """
+    Inject reproducible missingness into BILL_AMT1.
+
+    The default seed=42 preserves previous
+    pipeline behavior.
+    """
+
     if not 0 <= rate <= 1:
-        raise ValueError(f"Missingness rate must be between 0 and 1: {rate}")
+        raise ValueError(
+            f"Missingness rate must be between 0 and 1: {rate}"
+        )
+
+    if FEATURE not in X_batch.columns:
+        raise ValueError(
+            f"Missing feature: {FEATURE}"
+        )
 
     X_corrupted = X_batch.copy(deep=True)
+
     n_missing = int(len(X_corrupted) * rate)
-    rng = np.random.default_rng(42)
+
+    rng = np.random.default_rng(seed)
+
     positions = rng.choice(
         len(X_corrupted),
         size=n_missing,
         replace=False
     )
+
     X_corrupted.iloc[
         positions,
         X_corrupted.columns.get_loc(FEATURE)
     ] = np.nan
+
     return X_corrupted
 
 

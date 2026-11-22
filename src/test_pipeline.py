@@ -139,6 +139,26 @@ class PipelineTests(unittest.TestCase):
         )
         self.training_median = self.healthy["BILL_AMT1"].median()
 
+    def test_missingness_reproducible_across_seeds(self):
+        first = run_pipeline.inject_missingness(
+            self.healthy, 0.15, seed=0
+        )
+        repeated = run_pipeline.inject_missingness(
+            self.healthy, 0.15, seed=0
+        )
+        different = run_pipeline.inject_missingness(
+            self.healthy, 0.15, seed=1
+        )
+
+        pd.testing.assert_frame_equal(first, repeated)
+        self.assertFalse(
+            first["BILL_AMT1"].isna().equals(
+                different["BILL_AMT1"].isna()
+            )
+        )
+        self.assertFalse(self.healthy["BILL_AMT1"].isna().any())
+        self.assertEqual(first["BILL_AMT1"].isna().sum(), 3)
+
     def test_recovery_preserves_unaffected_columns_and_existing_values(self):
         original = self.corrupted.copy(deep=True)
         missing = original["BILL_AMT1"].isna()

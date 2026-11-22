@@ -430,6 +430,12 @@ research/bill_amt1/02_recovery_experiments.ipynb
 
 The extended 60% missingness scenarios and three-strategy comparisons are implemented in the research notebook rather than the standalone median-recovery pipeline.
 
+### Explore the Interactive Charts
+
+Use the Plotly charts in the notebooks to hover for exact values, zoom, and toggle series from the legend. In [Phase 2](Phase2.ipynb), drag the missingness sliders to see when the detector triggers.
+
+Open the [interactive research exports](results/research/bill_amt1/figures/) in a browser. These HTML files load Plotly.js from its CDN.
+
 ---
 
 ## 14. Interactive Dashboard — Planned

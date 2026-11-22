@@ -8,11 +8,9 @@ This project investigates whether a machine learning system can automatically de
 
 The **UCI Default of Credit Card Clients** workbook used in this project contains no missing values. The research uses Logistic Regression as the baseline classifier and tests how SHML responds when researchers deliberately mask `BILL_AMT1` values in experimental copies.
 
-The project aims to answer an important question:
+At 15% injected missingness, the standalone recovery policy reproduced all 20 notebook decisions. It accepted zero imputation 16 times, selected median imputation twice, and abstained twice. [Seed-by-seed comparison](results/bill_amt1/integrated_vs_notebook.csv)
 
-**Can an automated machine learning system recognize when a data failure occurs, evaluate potential corrections, and determine whether the correction is safe and effective?**
-
-Unlike conventional machine learning pipelines that rely on manual intervention, SHML investigates an automated detection, recovery, evaluation, and safety-decision framework.
+To reproduce the experiments, see [Running the Project](#13-running-the-project).
 
 ### Current Research Status
 
@@ -21,18 +19,21 @@ The following components have been implemented or experimentally evaluated:
 - Dataset preprocessing and exploratory data analysis
 - Healthy baseline model development
 - Automated missingness detection and diagnosis
-- Median-based recovery in the standalone pipeline
+- Zero imputation, training-median fallback, and abstention in the standalone pipeline
 - Comparative evaluation of zero, median, and regression imputation
 - Controlled missingness experiments across five severity levels
 - Statistical comparisons across 20 random missingness injection seeds
 - Paired confidence intervals and recovery-performance visualizations
 - Safety validation using a deliberately harmful recovery candidate
 - Offline rejection and approved-state preservation
-- Standalone pipeline execution and reproducibility checks
+- Seed-by-seed comparison with the research notebook
+- Held-out evaluation of both frozen recovery strategies
 
 **Current focus:** Completing rigorous scientific validation of `BILL_AMT1` before expanding to other failure types.
 
-**Planned:** Interactive Streamlit dashboard for visualizing the system's behavior and research results.
+**Streamlit dashboard:** [See the previews and run it locally](#14-streamlit-dashboard).
+
+![Held-out dashboard preview showing F1 and ROC-AUC for zero and median imputation across four missingness levels](docs/figures/10-held-out-comparison.svg)
 
 ---
 
@@ -58,13 +59,13 @@ To what extent can a self-healing machine learning system detect, diagnose, and 
 | Hypothesis | Research Focus | Current Assessment |
 |---|---|---|
 | H1 | Missingness detection and predictive degradation | Partially supported; degradation depends on the metric and recovery strategy |
-| H2 | Recovery effectiveness | Mixed findings; different strategies optimize different metrics |
+| H2 | Diagnosis-guided recovery | The added benefit of diagnosis-guided strategy selection remains untested |
 | H3 | Safety validation and rejection | Partially supported by harmful-candidate rejection and offline approved-state preservation |
 | H4 | Missingness severity and feature relationships | Severity effects observed; contribution of feature redundancy requires further validation |
 | H5 | Reproducibility and statistical reliability | Supported under tested configurations using deterministic experiments and repeated seeds |
 | H6 | Subgroup robustness | Pending evaluation |
 
-These assessments describe the evidence collected so far, not final confirmation of the hypotheses.
+See the [hypothesis evaluation](docs/hypothesis_evaluation.md) for the evidence and limitations.
 
 ---
 
@@ -136,17 +137,13 @@ The current detector raises an alert when the increase in missingness is **stric
 
 ### Stage 4 — Failure Diagnosis
 
-Identify the affected feature, missingness type, severity, and configured recovery action.
+Identify the affected feature, missingness type, and severity. The diagnosis also reports a recommended action.
 
 ### Stage 5 — Recovery
 
-The current standalone pipeline applies training-median imputation.
+The standalone policy tries zero imputation first and evaluates the training-median fallback if zero imputation fails the safety checks. It abstains if both candidates fail. The 5% case sits exactly at the detector's alert boundary. Imputation is evaluated whenever the batch contains missing values.
 
-The research notebook additionally compares:
-
-- Zero imputation
-- Training-median imputation
-- Regression-based imputation using `BILL_AMT2`
+The exploratory research notebook also evaluates regression-based imputation using `BILL_AMT2`.
 
 ### Stage 6 — Performance Evaluation
 
@@ -156,12 +153,13 @@ Evaluate each candidate using F1-score, recall, ROC-AUC, and additional performa
 
 Evaluate whether the candidate satisfies predefined safety conditions.
 
-The current safety controller allows a maximum relative loss of:
+The standalone policy requires data integrity and allows the following maximum relative losses against the healthy validation baseline:
 
 - **10% in F1**
 - **10% in recall**
+- **0.5% in ROC-AUC**
 
-Candidates exceeding these limits are rejected.
+Candidates exceeding any limit or failing the integrity check are rejected.
 
 The system's current rollback demonstration is an offline selection mechanism rather than production deployment rollback.
 
@@ -257,6 +255,14 @@ The findings indicate that a recovery method should not automatically be conside
 
 The preferred approach depends on explicitly defined performance objectives and safety constraints.
 
+### Integrated Recovery Decisions
+
+The standalone runner uses one seed across 0%, 5%, 15%, and 30% injected missingness. The robustness runner evaluates 20 seeds at 15% missingness with the same policy. All decisions matched the notebook. Median fallback was selected for seeds 0 and 2, and the policy abstained for seeds 8 and 11. [Integrated results](results/bill_amt1/integrated_20_seed_results.csv)
+
+### Held-Out Test Evaluation
+
+The held-out runner evaluates the two frozen strategies independently and applies the safety checks retrospectively. At 30% injected missingness, zero imputation increased F1 from 0.348416 to 0.378733, while ROC-AUC fell from 0.716954 to 0.712371. Both strategies exceeded the 0.5% relative ROC-AUC loss limit at that severity. [Held-out results](results/final_test/final_test_results.csv)
+
 ---
 
 ## 10. Statistical Evaluation
@@ -351,6 +357,7 @@ Production rollback and generalization to less extreme harmful repairs remain fu
 SHML/
 ├── Readme.md
 ├── requirements.txt
+├── requirements-cloud.txt
 ├── data/
 │   └── working/
 ├── src/
@@ -359,7 +366,9 @@ SHML/
 │   ├── recovery.py
 │   ├── evaluation.py
 │   ├── safety.py
-│   └── run_pipeline.py
+│   ├── run_pipeline.py
+│   ├── run_robustness.py
+│   └── run_final_test.py
 ├── research/
 │   └── bill_amt1/
 │       ├── 01_audit.ipynb
@@ -384,50 +393,43 @@ cd SHML
 
 ### Install Dependencies
 
+Use Python 3.12 to reproduce the tested command-line environment. Run the commands below from the repository root.
+
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-cloud.txt
 ```
 
-The full requirements file includes exploratory and future-extension libraries. Depending on the operating system and Python environment, some optional dependencies may require additional setup.
+For the research notebooks, install JupyterLab and Plotly with `python -m pip install jupyterlab plotly==6.8.0`. The full [requirements file](requirements.txt) includes dependencies for the earlier exploratory notebooks and optional extensions.
 
-### Run the Standalone Pipeline
+### Run the Experiments
 
 ```bash
 python -m src.run_pipeline
+python -m src.run_robustness
+python -m src.run_final_test
 ```
 
-The current standalone pipeline executes:
+| Runner | Experiment | Output |
+|---|---|---|
+| `src.run_pipeline` | Recovery selection at 0%, 5%, 15%, and 30% injected missingness using seed 42 | [Standalone validation results](results/phase7/recovery_policy_validation_results.csv) |
+| `src.run_robustness` | Recovery selection at 15% injected missingness using seeds 0–19 | [Integrated results](results/bill_amt1/integrated_20_seed_results.csv) and [notebook comparison](results/bill_amt1/integrated_vs_notebook.csv) |
+| `src.run_final_test` | Independent scoring of frozen zero and median imputation on the held-out test partition | [Held-out test results](results/final_test/final_test_results.csv) |
 
-1. Dataset verification
-2. Healthy baseline model training
-3. Missingness injection at 0%, 5%, 15%, and 30%
-4. Failure detection and diagnosis
-5. Median-based recovery
-6. Data integrity verification
-7. Performance evaluation
-8. Safety validation and result export
+### Run the Tests
 
-Results are written to:
-
-```text
-results/phase7/standalone_pipeline_results.csv
+```bash
+python -m unittest src.test_pipeline -v
+python -m unittest discover -s tests -v
 ```
 
 ### Run the Research Notebooks
 
-**Feature investigation:**
+- [Feature audit](research/bill_amt1/01_audit.ipynb)
+- [Exploratory recovery experiments](research/bill_amt1/02_recovery_experiments.ipynb), including 60% missingness and regression imputation
+- [Before-and-after recovery](research/bill_amt1/02_before_after_recovery.ipynb), including the notebook reference for the 20-seed experiment
+- [Final results and interactive plots](research/bill_amt1/03_final_results.ipynb)
 
-```text
-research/bill_amt1/01_audit.ipynb
-```
-
-**Recovery experiments, statistical evaluation, and safety testing:**
-
-```text
-research/bill_amt1/02_recovery_experiments.ipynb
-```
-
-The extended 60% missingness scenarios and three-strategy comparisons are implemented in the research notebook rather than the standalone median-recovery pipeline.
+See the [experimental protocol](docs/experimental_protocol.md) and [research report](docs/doc.md) for methods and interpretation.
 
 ### Explore the Interactive Charts
 
@@ -437,47 +439,22 @@ Open the [interactive research exports](results/research/bill_amt1/figures/) in 
 
 ---
 
-## 14. Interactive Dashboard — Planned
+## 14. Streamlit Dashboard
 
-An interactive **Streamlit dashboard** is planned to present the SHML workflow and experimental findings in an accessible format.
+The [Streamlit app](app.py) visualizes saved SHML results. Its four tabs cover the experimental workflow, held-out performance, safety policy, and individual validation seeds.
 
-### Proposed Dashboard Features
+![SHML workflow from the complete source workbook through simulated missingness, offline recovery selection, and the held-out audit](docs/figures/01-shml-workflow.svg)
 
-**System Overview**
+![Recovery decisions across 20 validation seeds, with 16 zero-imputation acceptances, 2 median fallbacks, and 2 abstentions](docs/figures/06-recovery-decisions.svg)
 
-- Healthy model performance
-- Dataset information
-- Experimental configuration
+### Run the Dashboard Locally
 
-**Failure Injection**
+From the repository root:
 
-- Select `BILL_AMT1` missingness severity
-- Trigger a controlled experiment
-- Display missingness detection and diagnosis
-
-**Recovery Comparison**
-
-- Zero imputation
-- Median imputation
-- Regression imputation
-- F1 and ROC-AUC comparisons
-
-**Safety Validation**
-
-- Display acceptance and rejection decisions
-- Explain safety-gate outcomes
-- Demonstrate offline approved-state preservation
-
-**Research Results**
-
-- Performance visualizations
-- Missingness severity analysis
-- Statistical confidence intervals
-- Recovery strategy comparisons
-
-The dashboard will serve as a visualization and demonstration interface for the existing SHML experiments.
-
-The dashboard is not yet implemented. It will be connected to actual pipeline outputs or clearly labeled saved experimental results.
+```bash
+python -m pip install streamlit==1.58.0 plotly==6.8.0 pandas==2.2.3
+python -m streamlit run app.py
+```
 
 ---
 
@@ -487,12 +464,12 @@ The project currently has several important limitations:
 
 1. **Untreated comparison:** A defensible no-recovery or fallback control remains necessary to quantify recovery benefit.
 2. **Simulated missingness:** The main investigation randomly masks only `BILL_AMT1` in copies of complete data. Performance under naturally occurring missingness remains untested.
-3. **Automated strategy selection:** The standalone pipeline does not yet automatically evaluate and choose among all three recovery methods.
+3. **Policy scope:** Integrated selection covers zero and training-median imputation. Regression imputation was evaluated in the exploratory notebook.
 4. **Safety testing:** Broader evaluation of realistic harmful candidates is required.
-5. **Subgroup evaluation:** Performance across predefined demographic subgroups remains untested.
+5. **Subgroup evaluation:** The [exploratory subgroup comparison](research/bill_amt1/05_subgroup_robustness.ipynb) leaves subgroup safety and reliability open.
 6. **Statistical generalization:** Current confidence intervals characterize variation across missingness masks on a fixed validation set.
 7. **Rollback:** The current implementation demonstrates offline approved-state preservation, not production deployment rollback.
-8. **Threshold justification:** The 5-percentage-point missingness detection threshold and 10% performance tolerances require additional sensitivity analysis.
+8. **Threshold justification:** The 5-percentage-point detection threshold and the performance tolerances require independent validation.
 
 These limitations define the remaining research work and potential future extensions.
 
@@ -511,14 +488,16 @@ These limitations define the remaining research work and potential future extens
 - [x] Calculate paired confidence intervals
 - [x] Test harmful recovery rejection
 - [x] Demonstrate offline approved-state preservation
+- [x] Integrate zero-imputation selection, median fallback, and abstention
+- [x] Explore safety threshold sensitivity on validation data
+- [x] Verify all 20 integrated decisions against the notebook
+- [x] Evaluate frozen strategies on the held-out test partition
 - [ ] Establish a defensible untreated or no-recovery comparison
 - [ ] Evaluate realistic harmful recovery candidates
 - [ ] Validate recovery safety across strategies and severity levels
-- [ ] Investigate threshold sensitivity
-- [ ] Perform subgroup robustness evaluation
-- [ ] Integrate automated recovery-candidate selection
-- [ ] Develop Streamlit dashboard
-- [ ] Complete final reproducibility verification
+- [ ] Validate safety thresholds independently
+- [ ] Establish subgroup safety and robustness
+- [x] Develop Streamlit dashboard for saved results
 - [ ] Prepare final research report and presentation
 
 ### Future Extensions

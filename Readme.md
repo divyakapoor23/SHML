@@ -31,7 +31,7 @@ The following components have been implemented or experimentally evaluated:
 
 **Current focus:** Completing rigorous scientific validation of `BILL_AMT1` before expanding to other failure types.
 
-**Streamlit dashboard:** [See the previews and run it locally](#14-streamlit-dashboard).
+**Streamlit dashboard:** [Open the live dashboard](https://d3s4h6tax9pxqy8t3f4ciu.streamlit.app/) · [See the previews and run it locally](#14-streamlit-dashboard)
 
 ![Held-out dashboard preview showing F1 and ROC-AUC for zero and median imputation across four missingness levels](docs/figures/10-held-out-comparison.svg)
 

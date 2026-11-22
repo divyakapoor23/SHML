@@ -457,7 +457,7 @@ python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
 
-Streamlit Community Cloud uses `app.py` as its entry point and the root `requirements.txt` for dashboard dependencies.
+Streamlit Community Cloud uses `app.py` as its entry point and the root `requirements.txt` for dashboard dependencies. Deployments on Python 3.14 use Pandas 2.3.3. The Python 3.12 research environment uses Pandas 2.2.3.
 
 ---
 

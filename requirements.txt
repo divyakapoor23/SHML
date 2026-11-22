@@ -1,4 +1,5 @@
 # Streamlit Community Cloud dependencies for app.py
 streamlit==1.58.0
-pandas==2.2.3
+pandas==2.2.3; python_version < "3.14"
+pandas==2.3.3; python_version >= "3.14"
 plotly==6.8.0
